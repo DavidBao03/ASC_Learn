@@ -4,6 +4,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <immintrin.h>
+#include <mpi.h>
 #include <omp.h>
 
 struct matrix {
@@ -67,10 +68,20 @@ struct matrix* matrix_multiple(struct matrix* a, struct matrix* b) {
 }
 
 struct matrix* matrix_multiple_optimize(struct matrix* a, struct matrix* b) {
-	struct matrix* c = matrix_create(a -> rows, b -> cols);
 	struct timeval start, end;
 	gettimeofday(&start, NULL);
 // 修改这段代码，使之并行化 -------------------
+	
+	int rank, comm_sz, my_row;
+	double *all_rst = NULL;
+	struct matrix* c = matrix_create(a -> rows, b -> cols);
+
+	MPI_Init(NULL,NULL);
+    	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    	MPI_Comm_size(MPI_COMM_WORLD,&comm_sz);
+    	
+    	my_row = 2000 / comm_sz;
+
 	#pragma omp parallel for num_threads(8) schedule(guided, 2)
 	for (int i = 0; i < a -> rows; i++) {
 		for (int k = 0; k < a -> cols; k++) {
@@ -88,6 +99,38 @@ struct matrix* matrix_multiple_optimize(struct matrix* a, struct matrix* b) {
 			}
 		}
 	}
+	
+	if(rank==0) {
+        	all_rst=(double *)malloc(2000 * sizeof(double));
+
+        	MPI_Gather
+            		(
+            		c->data,
+            		my_row,
+            		MPI_DOUBLE, 
+            		all_rst,
+            		my_row,
+            		MPI_DOUBLE,
+            		0,
+            		MPI_COMM_WORLD
+            );
+    	}
+    	else
+    	{
+        	MPI_Gather
+            		(
+            		c->data,
+            		my_row,
+            		MPI_DOUBLE,
+            		all_rst,
+            		my_row,
+            		MPI_DOUBLE,
+            		0,
+            		MPI_COMM_WORLD
+            	);
+    	}		
+
+    	MPI_Finalize();
 // --------------------------------------------
 	gettimeofday(&end, NULL);
 	printf("after optimize: %ld\n", (end.tv_sec - start.tv_sec) * 1000000 + end.tv_usec - start.tv_usec);

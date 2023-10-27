@@ -56,13 +56,15 @@ void function_b(){
 }
 
 void function_c(){
+	
 	printf("this is function C\n");
 	switch_thread(&thread_a, &thread_b);
-	while(1);
+	
 }
 
 void function_d(){
+	
 	printf("this is function D\n");
 	switch_thread(&thread_b, &thread_a);
-	while(1);
+	
 }

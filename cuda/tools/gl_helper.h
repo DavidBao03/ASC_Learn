@@ -41,9 +41,9 @@
 #else
 
 /* On Linux, include the system's copy of glut.h, glext.h, and glx.h */
-#include <GL/glut.h>
-#include <GL/glext.h>
-#include <GL/glx.h>
+#include "GL/glut.h"
+#include "GL/glext.h"
+#include "GL/glx.h"
 
 #define GET_PROC_ADDRESS( str ) glXGetProcAddress( (const GLubyte *)str )
 
